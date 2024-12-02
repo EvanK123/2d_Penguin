@@ -1,0 +1,372 @@
+<html>
+  <head>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <style>
+      {
+        margin: 0;
+        padding: 0;
+      }
+
+      /* to remove the top and left whitespace */
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      /* just to be sure these are full screen*/
+      canvas {
+        display: block;
+      }
+
+      /* To remove the scrollbars */
+    </style>
+  </head>
+  <body>
+    <canvas id="main_canvas"></canvas>
+    <script>
+      (function() {
+        const canvas = document.getElementById('main_canvas');
+        const context = canvas.getContext('2d');
+        // resize the canvas to fill browser window dynamically
+        window.addEventListener('resize', resizeCanvas, false);
+
+        function resizeCanvas() {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+      })();
+      var current_state = 'idle';
+      class Sprite {
+        constructor(jsonfile, x, y, sprite_name) {
+          this.x_location = x;
+          this.y_location = y;
+          this.sprite_name = sprite_name;
+          this.animations = {};
+          this.cur_frame = 0;
+          this.cur_action = 'idle';
+          this.last_action = 'idle';
+          this.sprite_data = [];
+          this.scale = 0.9;
+          this.acceleration = [0, 0];
+          this.clipboard = null;
+          this.cur_frame_h = 0;
+          this.cur_frame_w = 0;
+          const pathStrSplit = jsonfile.split('/');
+          const fileName = pathStrSplit.pop();
+          const directoryName = pathStrSplit.join('/');
+          this.img_path = directoryName + '/' + sprite_name;
+          var sprite_this = this;
+          $.getJSON(jsonfile, function(data) {
+            sprite_this.sprite_data = data;
+            for (const property in data[sprite_this.sprite_name]) {
+              sprite_this.animations[property] = {
+                'name': property,
+                'meta': data[sprite_name][property],
+                'imgs': []
+              };
+            }
+            console.log("Sprite data loaded:", sprite_this.sprite_data);
+          });
+        }
+        draw_or_load_the_damn_thing() {
+          var action = this.animations[this.cur_action];
+          try {
+            if (this.cur_frame >= action["meta"].length) {
+              this.cur_frame = 0;
+            }
+          } catch (error) {
+            console.error("Error accessing action meta data:", error);
+            return;
+          }
+          var frame = this.cur_frame;
+          if (action["imgs"][frame] == null) {
+            action["imgs"][frame] = new Image();
+            action["imgs"][frame].src = this.img_path + '/' + action['name'] + '/' + frame + '.png';
+            console.log("Loading image:", action["imgs"][frame].src);
+          }
+          var c = document.getElementById("main_canvas");
+          var ctx = c.getContext("2d");
+          // Clear the canvas before drawing the next frame
+          ctx.clearRect(0, 0, c.width, c.height);
+          try {
+            if (this.clipboard) {
+              ctx.putImageData(this.clipboard, this.x_location - this.acceleration[0], this.y_location - this.acceleration[1]);
+            }
+          } catch (error) {
+            console.error("Error putting image data:", error);
+          }
+          try {
+            this.clipboard = ctx.getImageData(this.x_location, this.y_location, (action["meta"][frame]['w'] + 1) * this.scale, (action["meta"][frame]['h'] + 1) * this.scale);
+          } catch (error) {
+            console.error("Error getting image data:", error);
+          }
+          try {
+            ctx.drawImage(action["imgs"][frame], this.x_location, this.y_location, action["meta"][frame]['w'] * this.scale, action["meta"][frame]['h'] * this.scale);
+            this.cur_frame_h = action["meta"][frame]['h'] * this.scale;
+            this.cur_frame_w = action["meta"][frame]['w'] * this.scale;
+            this.cur_frame = this.cur_frame + 1;
+          } catch (error) {
+            console.error("Error drawing image:", error);
+          }
+        }
+        idle() {
+          this.draw_or_load_the_damn_thing();
+        }
+        walk_N() {
+          this.draw_or_load_the_damn_thing();
+        }
+        walk_S() {
+          this.draw_or_load_the_damn_thing();
+        }
+        walk_E() {
+          this.draw_or_load_the_damn_thing();
+        }
+        walk_W() {
+          this.draw_or_load_the_damn_thing();
+        }
+        walk_SE() {
+          this.draw_or_load_the_damn_thing();
+        }
+        walk_NE() {
+          this.draw_or_load_the_damn_thing();
+        }
+        walk_SW() {
+          this.draw_or_load_the_damn_thing();
+        }
+        walk_NW() {
+          this.draw_or_load_the_damn_thing();
+        }
+        set_action(new_action) {
+          this.last_action = this.cur_action;
+          this.cur_action = new_action;
+          try {
+            var c = document.getElementById("main_canvas");
+            var ctx = c.getContext("2d");
+            if (this.clipboard) {
+              ctx.putImageData(this.clipboard, this.x_location - this.acceleration[0], this.y_location - this.acceleration[1]);
+            }
+          } catch (error) {
+            console.error("Error setting action:", error);
+          }
+          this.clipboard = null;
+          this.cur_frame = 0;
+        }
+        on_bound_hit_north() {
+          this.x_location = this.x_location - this.acceleration[0];
+          this.y_location = this.y_location - this.acceleration[1];
+          this.acceleration[0] = 0;
+          this.acceleration[1] = 0;
+          this.set_action('idle');
+        }
+        on_bound_hit_south() {
+          this.x_location = this.x_location - this.acceleration[0];
+          this.y_location = this.y_location - this.acceleration[1];
+          this.acceleration[0] = 0;
+          this.acceleration[1] = 0;
+          this.set_action('idle');
+        }
+        on_bound_hit_east() {
+          this.x_location = this.x_location - this.acceleration[0];
+          this.y_location = this.y_location - this.acceleration[1];
+          this.acceleration[0] = 0;
+          this.acceleration[1] = 0;
+          this.set_action('idle');
+        }
+        on_bound_hit_west() {
+          this.x_location = this.x_location - this.acceleration[0];
+          this.y_location = this.y_location - this.acceleration[1];
+          this.acceleration[0] = 0;
+          this.acceleration[1] = 0;
+          this.set_action('idle');
+        }
+        run() {
+          if (this.cur_action == 'idle') {
+            this.idle();
+          } else if (this.cur_action == 'walk_SE') {
+            this.walk_SE();
+          } else if (this.cur_action == 'walk_NE') {
+            this.walk_NE();
+          } else if (this.cur_action == 'walk_SW') {
+            this.walk_SW();
+          } else if (this.cur_action == 'walk_NW') {
+            this.walk_NW();
+          } else if (this.cur_action == 'walk_N') {
+            this.walk_N();
+          } else if (this.cur_action == 'walk_S') {
+            this.walk_S();
+          } else if (this.cur_action == 'walk_E') {
+            this.walk_E();
+          } else if (this.cur_action == 'walk_W') {
+            this.walk_W();
+          }
+          this.x_location = this.x_location + this.acceleration[0];
+          this.y_location = this.y_location + this.acceleration[1];
+          if ((this.x_location + this.cur_frame_w) >= window.innerWidth) {
+            this.on_bound_hit_east();
+          }
+          if ((this.y_location + this.cur_frame_h) >= window.innerHeight) {
+            this.on_bound_hit_south();
+          }
+          if (this.x_location <= 0) {
+            this.on_bound_hit_west();
+          }
+          if (this.y_location <= 0) {
+            this.on_bound_hit_north();
+          }
+        }
+      }
+      class MouseControlSprite extends Sprite {
+        moveTo(targetX, targetY) {
+          // Adjust target coordinates to point to the center of the sprite
+          const adjustedTargetX = targetX - this.cur_frame_w / 2;
+          const adjustedTargetY = targetY - this.cur_frame_h / 2;
+          this.targetX = adjustedTargetX;
+          this.targetY = adjustedTargetY;
+          const deltaX = adjustedTargetX - this.x_location;
+          const deltaY = adjustedTargetY - this.y_location;
+          const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+          const speed = 8; // Adjust the speed as needed
+          this.acceleration[0] = (deltaX / distance) * speed;
+          this.acceleration[1] = (deltaY / distance) * speed;
+          // Determine the direction and set the action
+          const angle = Math.atan2(deltaY, deltaX);
+          const absAngle = Math.abs(angle);
+          if (absAngle < Math.PI / 8) {
+            this.set_action('walk_E');
+          } else if (absAngle > 7 * Math.PI / 8) {
+            this.set_action('walk_W');
+          } else if (angle > 3 * Math.PI / 8 && angle < 5 * Math.PI / 8) {
+            this.set_action('walk_S');
+          } else if (angle > -5 * Math.PI / 8 && angle < -3 * Math.PI / 8) {
+            this.set_action('walk_N');
+          } else if (angle > 0) {
+            if (angle < Math.PI / 2) {
+              this.set_action('walk_SE');
+            } else {
+              this.set_action('walk_SW');
+            }
+          } else {
+            if (angle > -Math.PI / 2) {
+              this.set_action('walk_NE');
+            } else {
+              this.set_action('walk_NW');
+            }
+          }
+        }
+        run() {
+          // Check if sprite has reached the target (within a threshold)
+          if (Math.abs(this.x_location - this.targetX) < Math.abs(this.acceleration[0]) && Math.abs(this.y_location - this.targetY) < Math.abs(this.acceleration[1])) {
+            this.x_location = this.targetX;
+            this.y_location = this.targetY;
+            this.acceleration[0] = 0; // Reset horizontal movement
+            this.acceleration[1] = 0; // Reset vertical movement
+            this.set_action('idle'); // Set to idle when target is reached
+          } else {
+            // Continue moving towards target
+            super.run(); // This keeps running if the sprite hasn't reached the target yet
+          }
+        }
+      }
+
+      function run_loop() {
+        var cur_time = Date.now();
+        if ((cur_time - last_run_loop) >= (1000 / 10)) {
+          var num_of_sprites = mysprites.length;
+          for (i = 0; i < num_of_sprites; i++) {
+            mysprites[i].run();
+          }
+          last_run_loop = cur_time;
+        }
+        requestAnimationFrame(run_loop);
+      }
+      var mysprites = [];
+      var last_run_loop;
+      $(document).ready(function() {
+        const canvas = document.getElementById('main_canvas');
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const sprite = new MouseControlSprite("assets/Penguins/animationData.json", centerX, centerY, 'TenderBud');
+        mysprites.push(sprite);
+        last_run_loop = Date.now();
+        requestAnimationFrame(run_loop);
+        canvas.addEventListener('click', function(event) {
+          const rect = canvas.getBoundingClientRect();
+          const targetX = event.clientX - rect.left;
+          const targetY = event.clientY - rect.top;
+          sprite.moveTo(targetX, targetY);
+        });
+        const speed = 8; // Movement speed
+        let keysPressed = {};
+        // Keydown event listener for WASD and arrow keys
+        window.addEventListener('keydown', function(event) {
+          keysPressed[event.key] = true;
+          updateMovement();
+        });
+        window.addEventListener('keyup', function(event) {
+          delete keysPressed[event.key];
+          updateMovement();
+        });
+
+        function updateMovement() {
+          let newAction = null;
+          let acceleration = [0, 0]; // Reset acceleration before checking key presses
+          // Check for keyboard input
+          if (keysPressed['w'] || keysPressed['ArrowUp']) {
+            acceleration[1] = -speed; // Move up
+          }
+          if (keysPressed['a'] || keysPressed['ArrowLeft']) {
+            acceleration[0] = -speed; // Move left
+          }
+          if (keysPressed['s'] || keysPressed['ArrowDown']) {
+            acceleration[1] = speed; // Move down
+          }
+          if (keysPressed['d'] || keysPressed['ArrowRight']) {
+            acceleration[0] = speed; // Move right
+          }
+          // Normalize diagonal movement by ensuring both axes have the same speed if both keys are pressed
+          if (acceleration[0] !== 0 && acceleration[1] !== 0) {
+            acceleration[0] /= Math.sqrt(2); // Normalize horizontal acceleration
+            acceleration[1] /= Math.sqrt(2); // Normalize vertical acceleration
+          }
+          // Set the new action based on the acceleration
+          if (acceleration[0] < 0 && acceleration[1] < 0) {
+            newAction = 'walk_NW';
+          } else if (acceleration[0] > 0 && acceleration[1] < 0) {
+            newAction = 'walk_NE';
+          } else if (acceleration[0] < 0 && acceleration[1] > 0) {
+            newAction = 'walk_SW';
+          } else if (acceleration[0] > 0 && acceleration[1] > 0) {
+            newAction = 'walk_SE';
+          } else if (acceleration[0] === 0 && acceleration[1] < 0) {
+            newAction = 'walk_N';
+          } else if (acceleration[0] < 0 && acceleration[1] === 0) {
+            newAction = 'walk_W';
+          } else if (acceleration[0] === 0 && acceleration[1] > 0) {
+            newAction = 'walk_S';
+          } else if (acceleration[0] > 0 && acceleration[1] === 0) {
+            newAction = 'walk_E';
+          } else {
+            newAction = 'idle'; // No movement
+          }
+          // Update the sprite's acceleration
+          sprite.acceleration = acceleration;
+          // Update the action only if it has changed
+          if (sprite.cur_action !== newAction) {
+            sprite.set_action(newAction);
+          }
+        }
+      });
+      // $(document).ready(function () {
+      //     const canvas = document.getElementById('main_canvas');
+      //     const centerX = canvas.width / 2;
+      //     const centerY = canvas.height / 2;
+      //     mysprites.push(new KeyControlSprite("assets/Penguins/animationData.json", centerX, centerY, 'TenderBud'));
+      //     last_run_loop = Date.now();
+      //     requestAnimationFrame(run_loop);
+      // });
+    </script>
+  </body>
+</html>
