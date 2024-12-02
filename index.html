@@ -58,6 +58,13 @@
           const fileName = pathStrSplit.pop();
           const directoryName = pathStrSplit.join('/');
           this.img_path = directoryName + '/' + sprite_name;
+
+          // Create an off-screen canvas
+          this.offscreenCanvas = document.createElement('canvas');
+          this.offscreenCanvas.width = window.innerWidth;
+          this.offscreenCanvas.height = window.innerHeight;
+          this.offscreenContext = this.offscreenCanvas.getContext('2d');
+
           var sprite_this = this;
           $.getJSON(jsonfile, function(data) {
             sprite_this.sprite_data = data;
@@ -87,30 +94,38 @@
             action["imgs"][frame].src = this.img_path + '/' + action['name'] + '/' + frame + '.png';
             console.log("Loading image:", action["imgs"][frame].src);
           }
-          var c = document.getElementById("main_canvas");
-          var ctx = c.getContext("2d");
-          // Clear the canvas before drawing the next frame
-          ctx.clearRect(0, 0, c.width, c.height);
+
+          // Clear the off-screen canvas before drawing the next frame
+          this.offscreenContext.clearRect(0, 0, this.offscreenCanvas.width, this.offscreenCanvas.height);
+
           try {
             if (this.clipboard) {
-              ctx.putImageData(this.clipboard, this.x_location - this.acceleration[0], this.y_location - this.acceleration[1]);
+              this.offscreenContext.putImageData(this.clipboard, this.x_location - this.acceleration[0], this.y_location - this.acceleration[1]);
             }
           } catch (error) {
             console.error("Error putting image data:", error);
           }
+
           try {
-            this.clipboard = ctx.getImageData(this.x_location, this.y_location, (action["meta"][frame]['w'] + 1) * this.scale, (action["meta"][frame]['h'] + 1) * this.scale);
+            this.clipboard = this.offscreenContext.getImageData(this.x_location, this.y_location, (action["meta"][frame]['w'] + 1) * this.scale, (action["meta"][frame]['h'] + 1) * this.scale);
           } catch (error) {
             console.error("Error getting image data:", error);
           }
+
           try {
-            ctx.drawImage(action["imgs"][frame], this.x_location, this.y_location, action["meta"][frame]['w'] * this.scale, action["meta"][frame]['h'] * this.scale);
+            this.offscreenContext.drawImage(action["imgs"][frame], this.x_location, this.y_location, action["meta"][frame]['w'] * this.scale, action["meta"][frame]['h'] * this.scale);
             this.cur_frame_h = action["meta"][frame]['h'] * this.scale;
             this.cur_frame_w = action["meta"][frame]['w'] * this.scale;
             this.cur_frame = this.cur_frame + 1;
           } catch (error) {
             console.error("Error drawing image:", error);
           }
+
+          // Copy the off-screen canvas to the main canvas
+          var c = document.getElementById("main_canvas");
+          var ctx = c.getContext("2d");
+          ctx.clearRect(0, 0, c.width, c.height);
+          ctx.drawImage(this.offscreenCanvas, 0, 0);
         }
         idle() {
           this.draw_or_load_the_damn_thing();
@@ -143,10 +158,8 @@
           this.last_action = this.cur_action;
           this.cur_action = new_action;
           try {
-            var c = document.getElementById("main_canvas");
-            var ctx = c.getContext("2d");
             if (this.clipboard) {
-              ctx.putImageData(this.clipboard, this.x_location - this.acceleration[0], this.y_location - this.acceleration[1]);
+              this.offscreenContext.putImageData(this.clipboard, this.x_location - this.acceleration[0], this.y_location - this.acceleration[1]);
             }
           } catch (error) {
             console.error("Error setting action:", error);
