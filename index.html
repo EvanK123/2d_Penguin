@@ -139,7 +139,7 @@
           // Copy the off-screen canvas to the main canvas
           var c = document.getElementById("main_canvas");
           var ctx = c.getContext("2d");
-          ctx.clearRect(0, 0, c.width, c.height);
+          //ctx.clearRect(0, 0, c.width, c.height);
           ctx.drawImage(this.offscreenCanvas, 0, 0);
         }
 
@@ -313,6 +313,7 @@
         var cur_time = Date.now();
         if ((cur_time - last_run_loop) >= (1000 / 10)) {
           var num_of_sprites = mysprites.length;
+          console.log(num_of_sprites);
           for (i = 0; i < num_of_sprites; i++) {
             mysprites[i].run();
           }
@@ -328,7 +329,9 @@
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
         const sprite = new MouseControlSprite("assets/Penguins/animationData.json", centerX, centerY, 'TenderBud');
-        mysprites.push(sprite);
+        const sprite2 = new Sprite("assets/Penguins/animationData.json", centerX+100, centerY+100, 'TenderBud');
+
+        mysprites.push(sprite,sprite2);
         last_run_loop = Date.now();
         requestAnimationFrame(run_loop);
         canvas.addEventListener('click', function(event) {
