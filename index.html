@@ -143,6 +143,7 @@
           ctx.drawImage(this.offscreenCanvas, 0, 0);
         }
 
+
         /* all animations */
         idle() {
           this.draw_or_load_the_damn_thing();
@@ -314,6 +315,11 @@
         if ((cur_time - last_run_loop) >= (1000 / 10)) {
           var num_of_sprites = mysprites.length;
           console.log(num_of_sprites);
+          // this allows each sprite to clear it's own background w/o freaking out
+          // however, it is extremely janky and i can see this breaking in the future
+          var c = document.getElementById("main_canvas");
+          var ctx = c.getContext("2d");
+          ctx.clearRect(0, 0, c.width, c.height); // this was originally inside our draw function but moving it to run_loop fixed our problems
           for (i = 0; i < num_of_sprites; i++) {
             mysprites[i].run();
           }
@@ -328,10 +334,11 @@
         const canvas = document.getElementById('main_canvas');
         const centerX = canvas.width / 2;
         const centerY = canvas.height / 2;
-        const sprite = new MouseControlSprite("assets/Penguins/animationData.json", centerX, centerY, 'TenderBud');
+        const sprite = new Sprite("assets/Penguins/animationData.json", centerX, centerY, 'TenderBud');
         const sprite2 = new Sprite("assets/Penguins/animationData.json", centerX+100, centerY+100, 'TenderBud');
-
-        mysprites.push(sprite,sprite2);
+        const sprite3 = new Sprite("assets/Penguins/animationData.json", centerX-100, centerY+100, 'TenderBud');
+        const sprite4 = new Sprite("assets/Penguins/animationData.json", centerX+100, centerY-100, 'TenderBud');
+        mysprites.push(sprite,sprite2,sprite3,sprite4);
         last_run_loop = Date.now();
         requestAnimationFrame(run_loop);
         canvas.addEventListener('click', function(event) {
