@@ -38,6 +38,7 @@
         }
         resizeCanvas();
       })();
+
       var current_state = 'idle';
       class Sprite {
         constructor(jsonfile, x, y, sprite_name) {
@@ -78,6 +79,7 @@
             console.log("Sprite data loaded:", sprite_this.sprite_data);
           });
         }
+
         draw_or_load_the_damn_thing() {
           var action = this.animations[this.cur_action];
           try {
@@ -127,6 +129,8 @@
           ctx.clearRect(0, 0, c.width, c.height);
           ctx.drawImage(this.offscreenCanvas, 0, 0);
         }
+
+        /* all animations */
         idle() {
           this.draw_or_load_the_damn_thing();
         }
@@ -154,6 +158,7 @@
         walk_NW() {
           this.draw_or_load_the_damn_thing();
         }
+
         set_action(new_action) {
           this.last_action = this.cur_action;
           this.cur_action = new_action;
@@ -167,6 +172,7 @@
           this.clipboard = null;
           this.cur_frame = 0;
         }
+
         on_bound_hit_north() {
           this.x_location = this.x_location - this.acceleration[0];
           this.y_location = this.y_location - this.acceleration[1];
@@ -174,6 +180,7 @@
           this.acceleration[1] = 0;
           this.set_action('idle');
         }
+
         on_bound_hit_south() {
           this.x_location = this.x_location - this.acceleration[0];
           this.y_location = this.y_location - this.acceleration[1];
@@ -181,6 +188,7 @@
           this.acceleration[1] = 0;
           this.set_action('idle');
         }
+
         on_bound_hit_east() {
           this.x_location = this.x_location - this.acceleration[0];
           this.y_location = this.y_location - this.acceleration[1];
@@ -188,6 +196,7 @@
           this.acceleration[1] = 0;
           this.set_action('idle');
         }
+
         on_bound_hit_west() {
           this.x_location = this.x_location - this.acceleration[0];
           this.y_location = this.y_location - this.acceleration[1];
@@ -195,6 +204,7 @@
           this.acceleration[1] = 0;
           this.set_action('idle');
         }
+
         run() {
           if (this.cur_action == 'idle') {
             this.idle();
@@ -231,6 +241,7 @@
           }
         }
       }
+
       class MouseControlSprite extends Sprite {
         moveTo(targetX, targetY) {
           // Adjust target coordinates to point to the center of the sprite
@@ -269,6 +280,7 @@
             }
           }
         }
+
         run() {
           // Check if sprite has reached the target (within a threshold)
           if (Math.abs(this.x_location - this.targetX) < Math.abs(this.acceleration[0]) && Math.abs(this.y_location - this.targetY) < Math.abs(this.acceleration[1])) {
@@ -295,6 +307,7 @@
         }
         requestAnimationFrame(run_loop);
       }
+
       var mysprites = [];
       var last_run_loop;
       $(document).ready(function() {
@@ -371,6 +384,7 @@
             sprite.set_action(newAction);
           }
         }
+
       });
       // $(document).ready(function () {
       //     const canvas = document.getElementById('main_canvas');
